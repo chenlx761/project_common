@@ -9,6 +9,7 @@ import androidx.databinding.ObservableList.OnListChangedCallback
 import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import com.chenming.common.R
+import com.chenming.common.databinding.AdapterEmptyBindingBinding
 import com.chenming.common.databinding.AdapterEmptyBindingBindingImpl
 import com.chenming.common.listener.OnItemClickListener
 import com.chenming.common.listener.OnItemLongClickListener
@@ -18,7 +19,8 @@ import java.lang.ref.WeakReference
 /**
  * 监听数据变化和有空布局的adapter
  */
-open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K, BIND : ViewDataBinding>() :
+open abstract class AutoNotifyAdapter
+<T : BindingViewHolder<ViewDataBinding>, K, BIND : ViewDataBinding>() :
     RecyclerView.Adapter<RecyclerView.ViewHolder?>() {
     private val ITEM_TYPE_EMPTY = 9999
     private var mIsNoData: Boolean = false
@@ -28,12 +30,17 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
     private var mOnDataRefreshFinishListener: OnDataRefreshFinishListener? = null
     protected var mOnItemClickListener: OnItemClickListener? = null
     private var mResId: Int? = null
+    private var mEmptyImgRes: Int? = null
     protected var mOnItemLongClickListener: OnItemLongClickListener? = null
     private var mNeedStopFlash: Boolean = false
-    private var stopShowEmpty = false
+    private var mShowEmptyIcon: Boolean = true
 
-    fun setStopShowEmpty(stopShowEmpty: Boolean) {
-        this.stopShowEmpty = stopShowEmpty
+    fun setEmptyImageResId(resId: Int) {
+        mEmptyImgRes = resId
+    }
+
+    fun setShowEmptyIcon(showEmptyIcon: Boolean) {
+        this.mShowEmptyIcon = showEmptyIcon
     }
 
     fun setNeedStopFlash(needStopFlash: Boolean) {
@@ -84,7 +91,8 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
 
 
     override fun getItemViewType(position: Int): Int {
-        if (mIsNoData) return ITEM_TYPE_EMPTY
+        if (mIsNoData)
+            return ITEM_TYPE_EMPTY
         else {
             return getOtherItemViewType(position)
         }
@@ -95,22 +103,30 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
         return 0
     }
 
-    open fun <B : ViewDataBinding> getEmptyBinding(parent: ViewGroup): B {
+    open fun <B : AdapterEmptyBindingBinding> getEmptyBinding(parent: ViewGroup): B {
         return DataBindingUtil.inflate<AdapterEmptyBindingBindingImpl>(
-            LayoutInflater.from(mContext), R.layout.adapter_empty_binding, parent, false
+            LayoutInflater.from(mContext),
+            R.layout.adapter_empty_binding, parent, false
         ) as B
     }
 
     fun onCreateOtherViewHolder(parent: ViewGroup, viewType: Int): T {
         val inflate = DataBindingUtil.inflate<BIND>(
-            LayoutInflater.from(mContext), mResId!!, parent, false
+            LayoutInflater.from(mContext),
+            mResId!!, parent, false
         )
         return BindingViewHolder(inflate) as T
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         if (viewType == ITEM_TYPE_EMPTY) {
-            val binding = getEmptyBinding<ViewDataBinding>(parent)
+            val binding = getEmptyBinding<AdapterEmptyBindingBinding>(parent)
+            if (mShowEmptyIcon) {
+                if (mEmptyImgRes != null)
+                    binding.ivEmpty.setImageResource(mEmptyImgRes!!)
+            } else {
+                binding.ivEmpty.visibility = ViewGroup.GONE
+            }
             return BindingEmptyViewHolder(binding)
         }
 
@@ -126,11 +142,7 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
     }
 
     override fun getItemCount(): Int {
-
         if (mIsNoData) {
-            if (stopShowEmpty) {
-                return 0
-            }
             return 1
         }
         return getOtherItemCount()
@@ -157,7 +169,8 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
     }
 
 
-    private class WeakReferenceOnListChangedCallback<K : BindingViewHolder<ViewDataBinding>, T, BIND : ViewDataBinding> constructor(
+    private class WeakReferenceOnListChangedCallback<K : BindingViewHolder<ViewDataBinding>,
+            T, BIND : ViewDataBinding> constructor(
         adapter: AutoNotifyAdapter<K, T, BIND>
     ) : OnListChangedCallback<ObservableList<T>>() {
 
@@ -178,7 +191,9 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
         }
 
         override fun onItemRangeChanged(
-            sender: ObservableList<T>, positionStart: Int, itemCount: Int
+            sender: ObservableList<T>,
+            positionStart: Int,
+            itemCount: Int
         ) {
             val adapter = adapterRef.get() ?: return
             if (!adapter.mNeedStopFlash) {
@@ -191,7 +206,9 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
         }
 
         override fun onItemRangeInserted(
-            sender: ObservableList<T>, positionStart: Int, itemCount: Int
+            sender: ObservableList<T>,
+            positionStart: Int,
+            itemCount: Int
         ) {
             val adapter = adapterRef.get() ?: return
             if (!adapter.mNeedStopFlash) {
@@ -207,7 +224,10 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
         }
 
         override fun onItemRangeMoved(
-            sender: ObservableList<T>, fromPosition: Int, toPosition: Int, itemCount: Int
+            sender: ObservableList<T>,
+            fromPosition: Int,
+            toPosition: Int,
+            itemCount: Int
         ) {
             val adapter = adapterRef.get() ?: return
 
@@ -222,7 +242,9 @@ open abstract class AutoNotifyAdapter<T : BindingViewHolder<ViewDataBinding>, K,
         }
 
         override fun onItemRangeRemoved(
-            sender: ObservableList<T>, positionStart: Int, itemCount: Int
+            sender: ObservableList<T>,
+            positionStart: Int,
+            itemCount: Int
         ) {
 
             val adapter = adapterRef.get() ?: return
