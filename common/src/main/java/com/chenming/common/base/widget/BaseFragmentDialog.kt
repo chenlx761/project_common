@@ -73,16 +73,16 @@ abstract class BaseFragmentDialog<P : BaseViewModel<*>?, VB : ViewDataBinding?> 
         }
     }
 
-    fun showInfo(info: String?) {
+    open fun showInfo(info: String?) {
         if (TextUtils.isEmpty(info)) return
         ToastUtil.showShortToast(info)
     }
 
-    fun showInfo(resId: Int) {
+    open fun showInfo(resId: Int) {
         ToastUtil.showShortToast(CommApplication.getInstance().resources.getString(resId))
     }
 
-    fun showErrorMsg(msg: String?) {
+    open fun showErrorMsg(msg: String?) {
         ToastUtil.showShortToast(msg)
     }
 
@@ -100,7 +100,7 @@ abstract class BaseFragmentDialog<P : BaseViewModel<*>?, VB : ViewDataBinding?> 
         if (mViewModel != null) mViewModel!!.removeRequest()
     }
 
-    fun showLoading(listener: Runnable? = null) {
+    open fun showLoading(listener: Runnable? = null) {
         if (mDialogLoading != null) {
             return
         }
@@ -108,7 +108,7 @@ abstract class BaseFragmentDialog<P : BaseViewModel<*>?, VB : ViewDataBinding?> 
         mDialogLoading!!.show()
     }
 
-    fun dismissDialog() {
+    open fun dismissDialog() {
         if (mDialogLoading != null) {
             mDialogLoading!!.dismiss()
             mDialogLoading = null
