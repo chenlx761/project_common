@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.chenming.common.dialog.CommonDialogLoading
+import com.chenming.common.dialog.CommonLoadingDialog
 import com.chenming.common.listener.OnActivityResultListener
 import com.chenming.common.utils.CommApplication
 import com.chenming.common.utils.HandlerBackUtil.HandlerBackInterface
@@ -28,7 +29,7 @@ import com.chenming.common.utils.ToastUtil
 abstract class BaseFragment<P : BaseViewModel<*>?, VB : ViewDataBinding?> : Fragment(),
     HandlerBackInterface {
     private var rootView: View? = null
-    private var mDialogLoading: CommonDialogLoading? = null
+    private var mDialogLoading: CommonLoadingDialog? = null
     private var mOnDialogDismissListener: onDialogDismissListener? = null
     protected var mViewModel: P? = null
     protected var mBinding: VB? = null
@@ -138,11 +139,11 @@ abstract class BaseFragment<P : BaseViewModel<*>?, VB : ViewDataBinding?> : Frag
                 dismissDialog()
             } as Observer<ErrorRequestBean>))
             model.mHintString.observe(this) { info: String? -> showInfo(info) }
-            model.mHintStringRes.observe(this){resId:Int->showInfo(resId)}
+            model.mHintStringRes.observe(this) { resId: Int -> showInfo(resId) }
         }
     }
 
-   open fun showInfo(info: String?) {
+    open fun showInfo(info: String?) {
         if (TextUtils.isEmpty(info)) return
         ToastUtil.showShortToast(info)
     }
@@ -174,17 +175,21 @@ abstract class BaseFragment<P : BaseViewModel<*>?, VB : ViewDataBinding?> : Frag
 
     @JvmOverloads
     fun showLoading(listener: Runnable? = null) {
-        if (mDialogLoading != null) {
+        if (mDialogLoading != null && mDialogLoading!!.isShowing()) {
             return
         }
-        mDialogLoading = CommonDialogLoading().init(activity, listener)
+        mDialogLoading = CommonLoadingDialog(requireActivity(), listener, true)
         mDialogLoading!!.show()
     }
 
     fun dismissDialog() {
-        if (mDialogLoading != null) {
-            mDialogLoading!!.dismiss()
-            mDialogLoading = null
+        try {
+            if (mDialogLoading != null) {
+                mDialogLoading!!.dismiss()
+                mDialogLoading = null
+            }
+        } catch (e: Exception) {
+
         }
     }
 
