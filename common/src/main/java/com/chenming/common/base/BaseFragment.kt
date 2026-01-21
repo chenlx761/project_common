@@ -142,16 +142,16 @@ abstract class BaseFragment<P : BaseViewModel<*>?, VB : ViewDataBinding?> : Frag
         }
     }
 
-    fun showInfo(info: String?) {
+   open fun showInfo(info: String?) {
         if (TextUtils.isEmpty(info)) return
         ToastUtil.showShortToast(info)
     }
 
-    fun showInfo(resId: Int) {
+    open fun showInfo(resId: Int) {
         ToastUtil.showShortToast(CommApplication.getInstance().resources.getString(resId))
     }
 
-    fun showErrorMsg(msg: String?) {
+    open fun showErrorMsg(msg: String?) {
         ToastUtil.showShortToast(msg)
     }
 
